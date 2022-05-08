@@ -8,12 +8,22 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-  socket.on('chat message', msg => {
-    io.emit('chat message', msg);
+  socket.on('chat message', (msg, active_channel) => {
+    console.log(msg, active_channel)
+    if(active_channel === ""){
+      io.emit('chat message', msg);
+    }
+    else {
+      socket.to(active_channel).emit('chat message', msg)
+    }
   });
-  socket.on('create', function(room) {
+  socket.on('join', function(room) {
     socket.join(room);
-    console.log("created rooom" + room)
+    //console.log("join rooom " + room)
+  });
+  socket.on('leave', function(room) {
+    socket.leave(room);
+    //console.log("leave rooom " + room)
   });
 });
 
