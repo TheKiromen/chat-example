@@ -8,19 +8,24 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
+  //otrzymaj wiadomość
   socket.on('chat message', (msg, active_channel) => {
     console.log(msg, active_channel)
+    //jeśli brak kanału do wszystkich
     if(active_channel === ""){
       io.emit('chat message', msg);
     }
+    //jeśli kanał do kanału
     else {
       socket.to(active_channel).emit('chat message', msg)
     }
   });
+  //dołącz do kanału
   socket.on('join', function(room) {
     socket.join(room);
     //console.log("join rooom " + room)
   });
+  //odłącz od kanału
   socket.on('leave', function(room) {
     socket.leave(room);
     //console.log("leave rooom " + room)

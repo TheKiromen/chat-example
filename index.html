@@ -43,33 +43,38 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
+
       var socket = io();
 
       var messages = document.getElementById('messages');
       var form = document.getElementById('form');
       var input = document.getElementById('input');
-
+      //dołącz domyślnie do kanału 1
       var active_channel = "Ch1";
       socket.emit('join', active_channel);
 
-
+      //po kliknięciu send
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         if (input.value) {
+          //wyślij wiadomość
           socket.emit('chat message', input.value, active_channel);
           displayMsg(input.value);
           input.value = '';
         }
       });
 
+      //odbierz wiadomość
       socket.on('chat message', function(msg) {
         displayMsg(msg);
       });
 
-
+      //dodanie do listy kanału on click
       var elements = document.getElementsByClassName("channels");
       var myFunction = function() {
+        //usun się z kanału
         socket.emit("leave", active_channel)
+        //dodaj do innego kanału
         active_channel = this.innerHTML;
         socket.emit('join', active_channel);
         displayMsg("Added to channel " + active_channel);
@@ -79,7 +84,7 @@
         elements[i].addEventListener('click', myFunction, false);
       }
 
-
+      //tworzenie wiadomości 
       function displayMsg(msg){
         var item = document.createElement('li');
         item.textContent = msg;
