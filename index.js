@@ -21,15 +21,9 @@ io.on('connection', (socket) => {
     }
   });
   //dołącz do kanału
-  socket.on('join', function(room) {
-    socket.join(room);
-    //console.log("join rooom " + room)
-  });
+  socket.on('join', (room) => {socket.join(room);});
   //odłącz od kanału
-  socket.on('leave', function(room) {
-    socket.leave(room);
-    //console.log("leave rooom " + room)
-  });
+  socket.on('leave', (room) => {socket.leave(room);});
 });
 
 

@@ -44,17 +44,17 @@
 
     <script>
 
-      var socket = io();
+      let socket = io();
 
-      var messages = document.getElementById('messages');
-      var form = document.getElementById('form');
-      var input = document.getElementById('input');
+      let messages = document.getElementById('messages');
+      let form = document.getElementById('form');
+      let input = document.getElementById('input');
       //dołącz domyślnie do kanału 1
-      var active_channel = "Ch1";
+      let active_channel = "Ch1";
       socket.emit('join', active_channel);
 
       //po kliknięciu send
-      form.addEventListener('submit', function(e) {
+      form.addEventListener('submit',(e)=>{
         e.preventDefault();
         if (input.value) {
           //wyślij wiadomość
@@ -65,13 +65,11 @@
       });
 
       //odbierz wiadomość
-      socket.on('chat message', function(msg) {
-        displayMsg(msg);
-      });
+      socket.on('chat message', (msg)=>{displayMsg(msg);});
 
       //dodanie do listy kanału on click
-      var elements = document.getElementsByClassName("channels");
-      var myFunction = function() {
+      let channels = document.getElementsByClassName("channels");
+      let myFunction = () => {
         //usun się z kanału
         socket.emit("leave", active_channel)
         //dodaj do innego kanału
@@ -80,13 +78,13 @@
         displayMsg("Added to channel " + active_channel);
       };
 
-      for (var i = 0; i < elements.length; i++) {
-        elements[i].addEventListener('click', myFunction, false);
+      for (let i = 0; i < channels.length; i++) {
+        channels[i].addEventListener('click', myFunction, false);
       }
 
       //tworzenie wiadomości 
       function displayMsg(msg){
-        var item = document.createElement('li');
+        let item = document.createElement('li');
         item.textContent = msg;
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
