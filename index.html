@@ -5,6 +5,14 @@
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
+      #right{
+        width: 30%;
+        float: right;
+      }
+      #left{
+        width: 70%;
+        float: left;
+      }
       #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
       #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
       #input:focus { outline: none; }
@@ -16,10 +24,22 @@
     </style>
   </head>
   <body>
+  <div id="left">
     <ul id="messages"></ul>
     <form id="form" action="">
       <input id="input" autocomplete="off" /><button>Send</button>
     </form>
+  </div>
+  <div id="right">
+    <p>Channels</p>
+    <ul id="channel">
+      <li class="channels">Ch1</li>
+      <li class="channels">Ch2</li>
+    </ul>
+  </div>
+
+
+
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
@@ -29,9 +49,12 @@
       var form = document.getElementById('form');
       var input = document.getElementById('input');
 
+      var active_channel = "Ch1";
+
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         if (input.value) {
+          //socket.emit('chat message', input.value);
           socket.emit('chat message', input.value);
           input.value = '';
         }
@@ -43,6 +66,25 @@
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
       });
+
+
+      var elements = document.getElementsByClassName("channels");
+      var myFunction = function() {
+        /*socket.leave(active_channel);
+        active_channel = this.innerHTML;
+        socket.join(active_channel);*/
+        active_channel = this.innerHTML;
+        socket.emit('create', active_channel);
+        var item = document.createElement('li');
+        item.textContent = "Added to channel" + this.innerHTML;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      };
+
+      for (var i = 0; i < elements.length; i++) {
+        elements[i].addEventListener('click', myFunction, false);
+      }
+
     </script>
   </body>
 </html>
