@@ -4,6 +4,7 @@ const io = require('socket.io')(http);
 const port = process.env.PORT || 3000;
 
 let users = new Map();
+let channels = ["Global","Channel 1","Channel 2"]
 
 //TODO Wysyłać nie sam text ale obiekty z timestampem?
 //TODO Spróbować podpiąć SocketIO admin-ui
@@ -14,11 +15,13 @@ let users = new Map();
 io.on('connection', (socket) => {
 
   //Dołącz do serwera
-  socket.on('join',(username,channel)=>{
-    //Dołącz do kanału
-    socket.join(channel);
+  socket.on('join',(username)=>{
+    //Dołącz do domyślnego kanału
+    socket.join(channels[0]);
     //Dodaj do listy klientów
     users.set(socket.id,username);
+    //Wyślij listę kanałó
+    socket.emit('load channels',channels);
     //Wyślij klientom nową listę userów
     //TODO
   })

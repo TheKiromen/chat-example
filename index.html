@@ -32,9 +32,8 @@
   </div>
   <div id="right">
     <p>Channels</p>
-    <ul id="channel">
-      <li class="channels">Ch1</li>
-      <li class="channels">Ch2</li>
+    <ul id="channels">
+
     </ul>
   </div>
 
@@ -55,7 +54,36 @@
       let username = "Nick";
 
       //Dołącz do serwera
-      socket.emit('join',username,active_channel);
+      socket.emit('join',username);
+
+      socket.on('load channels',(channelNames)=>{
+        //Wyczyść listę kanałów
+        document.getElementById('channels').innerHTML="";
+        //Załaduj kanały z serwera
+        for(let channel of channelNames){
+          let node = document.createElement("li");
+          node.appendChild(document.createTextNode(channel));
+          node.classList.add('channel')
+          document.getElementById('channels').appendChild(node);
+        }
+        //dodanie do listy kanału on click
+        let channels = document.getElementsByClassName("channel");
+        let changeRoom = function() {
+          //Pobierz wartość na jaki kanał zmienić
+          active_channel = this.innerHTML;
+          //Zmień kanał
+          socket.emit('changeRoom', active_channel);
+          //TODO Wyczyścić tu listę poprzednich wartośći na froncie
+          //TODO Wyświetlić zmianę kanału jakoś inaczej niż wiadomość (bez usera i timestampa)
+          //TODO Osobna metoda u klienta do wyświetlania zmiany kanału?
+          displayMsg("Now sending messages to: " + active_channel);
+        }
+
+        //Dodaj eventy do HTML'a
+        for(let channel of channels){
+          channel.addEventListener('click',changeRoom,false);
+        }
+      });
 
       //Wyślij wiadomość
       form.addEventListener('submit',(e)=>{
@@ -76,21 +104,6 @@
       //Odbierz wiadomość
       socket.on('chat message', (user,msg,timestamp)=>{displayMsg(user,msg,timestamp);});
 
-      //dodanie do listy kanału on click
-      let channels = document.getElementsByClassName("channels");
-      let changeRoom = function() {
-        //Pobierz wartość na jaki kanał zmienić
-        active_channel = this.innerHTML;
-        //Zmień kanał
-        socket.emit('changeRoom', active_channel);
-        //TODO Wyczyścić tu listę poprzednich wartośći na froncie
-        displayMsg("Now sending messages to: " + active_channel);
-      }
-
-      //Dodaj eventy do HTML'a
-      for(let channel of channels){
-        channel.addEventListener('click',changeRoom,false);
-      }
 
       //Tworzenie wiadomości
       function displayMsg(user,msg,timestamp){
