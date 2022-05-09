@@ -49,43 +49,55 @@
       let messages = document.getElementById('messages');
       let form = document.getElementById('form');
       let input = document.getElementById('input');
-      //dołącz domyślnie do kanału 1
+      //Domyślny kanał 1
       let active_channel = "Ch1";
-      socket.emit('join', active_channel);
+      //TODO Pobieranie username z forma (popup?) i łączenie kiedy się kliknie connect?
+      let username = "Nick";
 
-      //po kliknięciu send
+      //Dołącz do serwera
+      socket.emit('join',username,active_channel);
+
+      //Wyślij wiadomość
       form.addEventListener('submit',(e)=>{
         e.preventDefault();
         if (input.value) {
+          //TODO pobrać timestamp jako aktualny czas (tylko godziny i minuty?)
+          let timestamp = "21:37";
           //wyślij wiadomość
-          socket.emit('chat message', input.value, active_channel);
+          socket.emit('chat message', input.value, active_channel,timestamp);
+          //FIXME tego nie powinno być, wiadomość powinien serwer odesłać (również do usera który wysłał)
+          //FIXME było to tam gdzieś w tutorialu, cza potem sprwadzić
+          //FIXME jak to się ogarnie to wywalić displayMsg() niżej i powinno śmigać
           displayMsg(input.value);
           input.value = '';
         }
       });
 
-      //odbierz wiadomość
-      socket.on('chat message', (msg)=>{displayMsg(msg);});
+      //Odbierz wiadomość
+      socket.on('chat message', (user,msg,timestamp)=>{displayMsg(user,msg,timestamp);});
 
       //dodanie do listy kanału on click
       let channels = document.getElementsByClassName("channels");
-      let myFunction = () => {
-        //usun się z kanału
-        socket.emit("leave", active_channel)
-        //dodaj do innego kanału
+      let changeRoom = function() {
+        //Pobierz wartość na jaki kanał zmienić
         active_channel = this.innerHTML;
-        socket.emit('join', active_channel);
-        displayMsg("Added to channel " + active_channel);
-      };
-
-      for (let i = 0; i < channels.length; i++) {
-        channels[i].addEventListener('click', myFunction, false);
+        //Zmień kanał
+        socket.emit('changeRoom', active_channel);
+        //TODO Wyczyścić tu listę poprzednich wartośći na froncie
+        displayMsg("Now sending messages to: " + active_channel);
       }
 
-      //tworzenie wiadomości 
-      function displayMsg(msg){
+      //Dodaj eventy do HTML'a
+      for(let channel of channels){
+        channel.addEventListener('click',changeRoom,false);
+      }
+
+      //Tworzenie wiadomości
+      function displayMsg(user,msg,timestamp){
+        //TODO dodać wyświetlanie nicku kto wysłał i timestampu tak żeby to jakoś sensownie wyglądało
+        //TODO np dodać ifa że jeśli user==username to kolor wiadomości inny
         let item = document.createElement('li');
-        item.textContent = msg;
+        item.textContent = user+": "+msg+" ("+timestamp+")";
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
       }
