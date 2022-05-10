@@ -27,7 +27,6 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="nodejs_package_manager_path" value="npm" />
@@ -66,7 +65,7 @@
       <workItem from="1652111067793" duration="134000" />
       <workItem from="1652115905226" duration="901000" />
       <workItem from="1652177025920" duration="3878000" />
-      <workItem from="1652201926479" duration="7569000" />
+      <workItem from="1652201926479" duration="7789000" />
     </task>
     <servers />
   </component>
