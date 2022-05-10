@@ -5,22 +5,29 @@
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-      #right{
-        width: 30%;
-        float: right;
+      #right{ width: 30%; float: right;
       }
-      #left{
-        width: 70%;
-        float: left;
-      }
+      #left{ width: 70%;float: left;}
       #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
       #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
       #input:focus { outline: none; }
       #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
 
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages > li { padding: 0.5rem 1rem; }
-      #messages > li:nth-child(odd) { background: #efefef; }
+      #messages { display: flex; flex-direction: column;}
+      #messages > div {margin: 5px auto; padding: 0.5rem 1rem; border-radius:10px; max-width: 70%;}
+      #messages > div:nth-child(odd) { background: #efefef; }
+      #messages > div >p {margin: 0; padding: 0;word-break: break-all;}
+      #messages > div > .time{
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        font-size: xx-small;
+        color: #303030 ;
+      }
+      #messages > div > .user{
+        font-size: x-small;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
@@ -37,9 +44,9 @@
     </ul>
     <br>
     <p>Users</p>
-    <ul id="users">
+    <div id="users">
 
-    </ul>
+    </div>
   </div>
 
 
@@ -55,8 +62,14 @@
       let input = document.getElementById('input');
       //Domyślny kanał globalny
       let active_channel = "Global";
-      //TODO Pobieranie username z forma (popup?) i łączenie kiedy się kliknie connect?
-      let username = "Nick";
+      //GOTOWE - TODO Pobieranie username z forma (popup?) i łączenie kiedy się kliknie connect?
+      let username ="";
+      while(username == ""){
+        username= prompt("Podaj nick nie chce mi sie żyć kurwa ")
+      }
+      // wylosuj kolor dla użytkownika
+      //let kolor = "rgb("+parseInt(Math.random() * (0 - 255 + 1))+","+parseInt(Math.random() * (0 - 255 + 1))+","+parseInt(Math.random() * (0 - 255 + 1))+")";
+      let kolor = "rgb(39,104,238)";
 
       //Dołącz do serwera
       socket.emit('join',username);
@@ -121,8 +134,23 @@
         //TODO "Upiększyć" wyświetlanie formatu wiadomości
         //TODO np dodać ifa że jeśli user==username to kolor wiadomości inny
         //TODO nicki pogrubić a czas kursywą czy coś
-        let item = document.createElement('li');
-        item.textContent = user+": "+msg+" ("+timestamp+")";
+        let item = document.createElement('div');
+        if(user===username){
+          item.setAttribute("style", "background-color:"+kolor+"; align:right;");
+
+        }
+        let i_user= document.createElement("p");
+        i_user.textContent=user;
+        i_user.classList.add("user");
+        let i_msg= document.createElement("p");
+        i_msg.textContent=msg;
+        let i_time= document.createElement("p");
+        i_time.textContent=timestamp;
+        i_time.classList.add("time");
+        //item.textContent = user+":"+msg+" ("+timestamp+")";
+        item.appendChild(i_user);
+        item.appendChild(i_msg);
+        item.appendChild(i_time);
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
       }
