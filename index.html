@@ -8,21 +8,22 @@
       #right{ width: 30%; float: right;
       }
       #left{ width: 70%;float: left;}
-      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px);}
       #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
       #input:focus { outline: none; }
       #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
 
       #messages { display: flex; flex-direction: column;}
-      #messages > div {margin: 5px auto; padding: 0.5rem 1rem; border-radius:10px; max-width: 70%;position: relative;}
+      #messages > div {padding: 0.5rem 1rem; border-radius:10px; width:fit-content;position: relative; margin:5px;}
       #messages > div:nth-child(odd) { background: #efefef; }
-      #messages > div >p {margin: 0; padding: 0;word-break: break-all;}
+      #messages > div >p {margin: 0 20px 0 0; padding:0;word-break: break-all;}
       #messages > div > .time{
         position: absolute;
-        top: 3px;
-        right: 3px;
+        top: 8px;
+        right: 10px;
         font-size: xx-small;
         color: #303030 ;
+        margin-right:0px;
       }
       #messages > div > .user{
         font-size: x-small;
@@ -62,13 +63,10 @@
       let input = document.getElementById('input');
       //Domyślny kanał globalny
       let active_channel = "Global";
-      //GOTOWE - TODO Pobieranie username z forma (popup?) i łączenie kiedy się kliknie connect?
       let username ="";
-      while(username == ""){
-        username= prompt("Podaj nick nie chce mi sie żyć kurwa ")
+      while(username == "" || username == null){
+        username= prompt("Podaj nick:");
       }
-      // wylosuj kolor dla użytkownika
-      //let kolor = "rgb("+parseInt(Math.random() * (0 - 255 + 1))+","+parseInt(Math.random() * (0 - 255 + 1))+","+parseInt(Math.random() * (0 - 255 + 1))+")";
       let kolor = "rgb(39,104,238)";
 
       //Dołącz do serwera
@@ -131,13 +129,9 @@
 
       //Tworzenie wiadomości
       function displayMsg(user,msg,timestamp){
-        //TODO "Upiększyć" wyświetlanie formatu wiadomości
-        //TODO np dodać ifa że jeśli user==username to kolor wiadomości inny
-        //TODO nicki pogrubić a czas kursywą czy coś
         let item = document.createElement('div');
         if(user===username){
           item.setAttribute("style", "background-color:"+kolor+"; align:right;");
-
         }
         let i_user= document.createElement("p");
         i_user.textContent=user;
