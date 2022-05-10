@@ -6,10 +6,8 @@ const port = process.env.PORT || 3000;
 let users = new Map();
 let channels = ["Global","Channel 1","Channel 2"]
 
-//TODO Wysyłać nie sam text ale obiekty z timestampem?
 //TODO Spróbować podpiąć SocketIO admin-ui
 
-//FIXME Pod koniec pousuwać niepotrzebne console.logi
 
 //Klient łączy się z serwerem
 io.on('connection', (socket) => {
@@ -23,7 +21,9 @@ io.on('connection', (socket) => {
     //Wyślij listę kanałó
     socket.emit('load channels',channels);
     //Wyślij klientom nową listę userów
-    //TODO
+    //Obiekt wysyłany jest serializowany więc mapa nie przejdzie, rzutujemy na obiekt
+    let obj = Object.fromEntries(users);
+    io.sockets.emit('update users',obj);
   })
 
 
@@ -32,14 +32,15 @@ io.on('connection', (socket) => {
     //Usuń z listy klientów
     users.delete(socket.id);
     //Wyślij klientom nową listę userów
-    //TODO
+    //Obiekt wysyłany jest serializowany więc mapa nie przejdzie, rzutujemy na obiekt
+    let obj = Object.fromEntries(users);
+    io.sockets.emit('update users',obj);
   })
 
   //Rozsyłanie wiadomości
   socket.on('chat message', (msg, active_channel,timestamp) => {
-    //Roześlij wiadomość do wszystkich w kanale
-    //FIXME ustawić żeby wysyłało też do samego siebie
-    socket.to(active_channel).emit('chat message', users.get(socket.id),msg,timestamp);
+    //Roześlij wiadomość do wszystkich w kanale włącznie z nadawcą
+    io.sockets.in(active_channel).emit('chat message', users.get(socket.id),msg,timestamp);
   });
 
   //Zmień kanał

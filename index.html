@@ -35,6 +35,11 @@
     <ul id="channels">
 
     </ul>
+    <br>
+    <p>Users</p>
+    <ul id="users">
+
+    </ul>
   </div>
 
 
@@ -48,14 +53,15 @@
       let messages = document.getElementById('messages');
       let form = document.getElementById('form');
       let input = document.getElementById('input');
-      //Domyślny kanał 1
-      let active_channel = "Ch1";
+      //Domyślny kanał globalny
+      let active_channel = "Global";
       //TODO Pobieranie username z forma (popup?) i łączenie kiedy się kliknie connect?
       let username = "Nick";
 
       //Dołącz do serwera
       socket.emit('join',username);
 
+      //Załaduj kanały z serwera
       socket.on('load channels',(channelNames)=>{
         //Wyczyść listę kanałów
         document.getElementById('channels').innerHTML="";
@@ -70,13 +76,13 @@
         let channels = document.getElementsByClassName("channel");
         let changeRoom = function() {
           //Pobierz wartość na jaki kanał zmienić
-          active_channel = this.innerHTML;
-          //Zmień kanał
-          socket.emit('changeRoom', active_channel);
-          //TODO Wyczyścić tu listę poprzednich wartośći na froncie
-          //TODO Wyświetlić zmianę kanału jakoś inaczej niż wiadomość (bez usera i timestampa)
-          //TODO Osobna metoda u klienta do wyświetlania zmiany kanału?
-          displayMsg("Now sending messages to: " + active_channel);
+          if(active_channel!=this.innerHTML){
+            active_channel = this.innerHTML;
+            //Zmień kanał
+            socket.emit('changeRoom', active_channel);
+            messages.innerHTML="";
+            displayRoomChange(active_channel);
+          }
         }
 
         //Dodaj eventy do HTML'a
@@ -85,18 +91,23 @@
         }
       });
 
+      //Załaduj listę klientów z serwera
+      socket.on('update users',users=>{
+        console.log("Updating");
+        updateActiveUsers(new Map(Object.entries(users)));
+      });
+
+
+
       //Wyślij wiadomość
       form.addEventListener('submit',(e)=>{
         e.preventDefault();
         if (input.value) {
-          //TODO pobrać timestamp jako aktualny czas (tylko godziny i minuty?)
-          let timestamp = "21:37";
-          //wyślij wiadomość
+          //Pobierz aktualny czas
+          let data = new Date();
+          let timestamp = data.getHours()+":"+data.getMinutes();
+          //Wyślij wiadomość
           socket.emit('chat message', input.value, active_channel,timestamp);
-          //FIXME tego nie powinno być, wiadomość powinien serwer odesłać (również do usera który wysłał)
-          //FIXME było to tam gdzieś w tutorialu, cza potem sprwadzić
-          //FIXME jak to się ogarnie to wywalić displayMsg() niżej i powinno śmigać
-          displayMsg(input.value);
           input.value = '';
         }
       });
@@ -107,12 +118,32 @@
 
       //Tworzenie wiadomości
       function displayMsg(user,msg,timestamp){
-        //TODO dodać wyświetlanie nicku kto wysłał i timestampu tak żeby to jakoś sensownie wyglądało
+        //TODO "Upiększyć" wyświetlanie formatu wiadomości
         //TODO np dodać ifa że jeśli user==username to kolor wiadomości inny
+        //TODO nicki pogrubić a czas kursywą czy coś
         let item = document.createElement('li');
         item.textContent = user+": "+msg+" ("+timestamp+")";
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
+      }
+
+      function displayRoomChange(room){
+        let item = document.createElement('li');
+        item.textContent="Now sending messages to: "+room;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+
+      function updateActiveUsers(users){
+        let userList = document.getElementById('users');
+        users.forEach((value,key)=>{
+          if(key!=socket.id) {
+            let node = document.createElement("li");
+            node.appendChild(document.createTextNode(key + " (" + value + ")"));
+            node.classList.add('user');
+            userList.appendChild(node);
+          }
+        })
       }
     </script>
   </body>
