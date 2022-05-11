@@ -16,17 +16,17 @@
       #messages { display: flex; flex-direction: column;}
       #messages > div {padding: 0.5rem 1rem; border-radius:10px; width:fit-content;position: relative; margin:5px;}
       #messages > div:nth-child(odd) { background: #efefef; }
-      #messages > div >p {margin: 0 20px 0 0; padding:0;word-break: break-all;}
+      #messages > div >p {margin: 0 25px 0 0; padding:0;word-break: break-all;}
       #messages > div > .time{
         position: absolute;
-        top: 8px;
+        top: 11px;
         right: 10px;
         font-size: xx-small;
         color: #303030 ;
         margin-right:0px;
       }
       #messages > div > .user{
-        font-size: x-small;
+        font-size: small;
         font-weight: bold;
       }
     </style>
@@ -68,6 +68,27 @@
         username= prompt("Podaj nick:");
       }
       let kolor = "rgb(39,104,238)";
+      //Wybór kanału
+      let changeRoom = function() {
+        //Pobierz wartość na jaki kanał zmienić
+        if(active_channel!=this.innerHTML){
+          active_channel = this.innerHTML;
+          //Zmień kanał
+          socket.emit('changeRoom', active_channel);
+          messages.innerHTML="";
+          displayRoomChange(active_channel);
+        }
+      }
+      //Wybór prywatnej wiadomości
+      let sendPrivateMessage = function(){
+        let targetUser = this.innerHTML.split(' ');
+        if(active_channel!=targetUser[0]){
+          active_channel=targetUser[0];
+          socket.emit('changeRoom',active_channel);
+          messages.innerHTML="";
+          displayRoomChange(targetUser[1].replace('(',"").replace(')',""));
+        }
+      }
 
       //Dołącz do serwera
       socket.emit('join',username);
@@ -85,17 +106,6 @@
         }
         //dodanie do listy kanału on click
         let channels = document.getElementsByClassName("channel");
-        let changeRoom = function() {
-          //Pobierz wartość na jaki kanał zmienić
-          if(active_channel!=this.innerHTML){
-            active_channel = this.innerHTML;
-            //Zmień kanał
-            socket.emit('changeRoom', active_channel);
-            messages.innerHTML="";
-            displayRoomChange(active_channel);
-          }
-        }
-
         //Dodaj eventy do HTML'a
         for(let channel of channels){
           channel.addEventListener('click',changeRoom,false);
@@ -104,8 +114,15 @@
 
       //Załaduj listę klientów z serwera
       socket.on('update users',users=>{
-        console.log("Updating");
+        //Wyczyść starych klientów
+        document.getElementById('users').innerHTML="";
+        //Dodaj aktualną listę klientów
         updateActiveUsers(new Map(Object.entries(users)));
+        let userList = document.getElementsByClassName("user");
+        //Dodaj eventy do HTML'a
+        for(let user of userList){
+          user.addEventListener('click',sendPrivateMessage,false);
+        }
       });
 
 

@@ -6,9 +6,6 @@ const port = process.env.PORT || 3000;
 let users = new Map();
 let channels = ["Global","Channel 1","Channel 2"]
 
-//TODO Spróbować podpiąć SocketIO admin-ui
-
-
 //Klient łączy się z serwerem
 io.on('connection', (socket) => {
 
@@ -39,6 +36,10 @@ io.on('connection', (socket) => {
 
   //Rozsyłanie wiadomości
   socket.on('chat message', (msg, active_channel,timestamp) => {
+    //Jeśli prywatna wiadomość, oznacz
+    if(users.has(active_channel)){
+      msg="(Private) "+msg;
+    }
     //Roześlij wiadomość do wszystkich w kanale włącznie z nadawcą
     io.sockets.in(active_channel).emit('chat message', users.get(socket.id),msg,timestamp);
   });
