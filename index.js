@@ -3,14 +3,58 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+let users = new Map();
+let channels = ["Global","Channel 1","Channel 2"]
+
+//Klient łączy się z serwerem
+io.on('connection', (socket) => {
+
+  //Dołącz do serwera
+  socket.on('join',(username)=>{
+    //Dołącz do domyślnego kanału
+    socket.join(channels[0]);
+    //Dodaj do listy klientów
+    users.set(socket.id,username);
+    //Wyślij listę kanałó
+    socket.emit('load channels',channels);
+    //Wyślij klientom nową listę userów
+    //Obiekt wysyłany jest serializowany więc mapa nie przejdzie, rzutujemy na obiekt
+    let obj = Object.fromEntries(users);
+    io.sockets.emit('update users',obj);
+  })
+
+
+  //Wyjdź z serwera
+  socket.on('disconnect',()=>{
+    //Usuń z listy klientów
+    users.delete(socket.id);
+    //Wyślij klientom nową listę userów
+    //Obiekt wysyłany jest serializowany więc mapa nie przejdzie, rzutujemy na obiekt
+    let obj = Object.fromEntries(users);
+    io.sockets.emit('update users',obj);
+  })
+
+  //Rozsyłanie wiadomości
+  socket.on('chat message', (msg, active_channel,timestamp) => {
+    //Jeśli prywatna wiadomość, oznacz
+    if(users.has(active_channel)){
+      msg="(Private) "+msg;
+    }
+    //Roześlij wiadomość do wszystkich w kanale włącznie z nadawcą
+    io.sockets.in(active_channel).emit('chat message', users.get(socket.id),msg,timestamp);
+  });
+
+  //Zmień kanał
+  socket.on('changeRoom',(room)=>{
+    //Opuść aktualny kanał
+    socket.leave(Array.from(socket.rooms)[1]);
+    //Dołącz do nowego kanału
+    socket.join(room);
+  })
 });
 
-io.on('connection', (socket) => {
-  socket.on('chat message', msg => {
-    io.emit('chat message', msg);
-  });
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
 });
 
 http.listen(port, () => {

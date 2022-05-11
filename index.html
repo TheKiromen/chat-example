@@ -5,44 +5,191 @@
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #right{ width: 30%; float: right; position: fixed; top: 0;  right: 0; padding-left: 3rem;}
+      #left{ width: 70%;float: left; padding-bottom: 3rem;}
+
+      #right ul{
+        cursor: pointer;
+      }
+      #users{
+        cursor: pointer;
+      }
+
+      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px);}
       #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
       #input:focus { outline: none; }
-      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; cursor: pointer;}
 
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages > li { padding: 0.5rem 1rem; }
-      #messages > li:nth-child(odd) { background: #efefef; }
+      #messages { display: flex; flex-direction: column;}
+      #messages > div {padding: 0.5rem 1rem; border-radius:10px; width:fit-content;position: relative; margin:5px;}
+      #messages > div:nth-child(odd) { background: #efefef; }
+      #messages > div >p {margin: 0 25px 0 0; padding:0;word-break: break-all;}
+      #messages > div > .time{
+        position: absolute;
+        top: 11px;
+        right: 10px;
+        font-size: xx-small;
+        color: #303030 ;
+        margin-right:0px;
+      }
+      #messages > div > .user{
+        font-size: small;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
+  <div id="left">
     <ul id="messages"></ul>
     <form id="form" action="">
       <input id="input" autocomplete="off" /><button>Send</button>
     </form>
+  </div>
+  <div id="right">
+    <p><b>Channels</b></p>
+    <ul id="channels">
+    </ul>
+    <br>
+    <p><b>Users</b></p>
+    <div id="users">
+
+    </div>
+  </div>
+
+
+
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
-      var socket = io();
 
-      var messages = document.getElementById('messages');
-      var form = document.getElementById('form');
-      var input = document.getElementById('input');
+      let socket = io();
 
-      form.addEventListener('submit', function(e) {
+      let messages = document.getElementById('messages');
+      let form = document.getElementById('form');
+      let input = document.getElementById('input');
+      //Domyślny kanał globalny
+      let active_channel = "Global";
+      let username ="";
+      while(username == "" || username == null){
+        username= prompt("Podaj nick:");
+      }
+      let kolor = "rgb(39,104,238)";
+      //Wybór kanału
+      let changeRoom = function() {
+        //Pobierz wartość na jaki kanał zmienić
+        if(active_channel!=this.innerHTML){
+          active_channel = this.innerHTML;
+          //Zmień kanał
+          socket.emit('changeRoom', active_channel);
+          messages.innerHTML="";
+          displayRoomChange(active_channel);
+        }
+      }
+      //Wybór prywatnej wiadomości
+      let sendPrivateMessage = function(){
+        let targetUser = this.innerHTML.split(' ');
+        if(active_channel!=targetUser[0]){
+          active_channel=targetUser[0];
+          socket.emit('changeRoom',active_channel);
+          messages.innerHTML="";
+          displayRoomChange(targetUser[1].replace('(',"").replace(')',""));
+        }
+      }
+
+      //Dołącz do serwera
+      socket.emit('join',username);
+
+      //Załaduj kanały z serwera
+      socket.on('load channels',(channelNames)=>{
+        //Wyczyść listę kanałów
+        document.getElementById('channels').innerHTML="";
+        //Załaduj kanały z serwera
+        for(let channel of channelNames){
+          let node = document.createElement("li");
+          node.appendChild(document.createTextNode(channel));
+          node.classList.add('channel')
+          document.getElementById('channels').appendChild(node);
+        }
+        //dodanie do listy kanału on click
+        let channels = document.getElementsByClassName("channel");
+        //Dodaj eventy do HTML'a
+        for(let channel of channels){
+          channel.addEventListener('click',changeRoom,false);
+        }
+      });
+
+      //Załaduj listę klientów z serwera
+      socket.on('update users',users=>{
+        //Wyczyść starych klientów
+        document.getElementById('users').innerHTML="";
+        //Dodaj aktualną listę klientów
+        updateActiveUsers(new Map(Object.entries(users)));
+        let userList = document.getElementsByClassName("user");
+        //Dodaj eventy do HTML'a
+        for(let user of userList){
+          user.addEventListener('click',sendPrivateMessage,false);
+        }
+      });
+
+
+
+      //Wyślij wiadomość
+      form.addEventListener('submit',(e)=>{
         e.preventDefault();
         if (input.value) {
-          socket.emit('chat message', input.value);
+          //Pobierz aktualny czas
+          let data = new Date();
+          let timestamp = data.getHours()+":"+data.getMinutes();
+          //Wyślij wiadomość
+          socket.emit('chat message', input.value, active_channel,timestamp);
           input.value = '';
         }
       });
 
-      socket.on('chat message', function(msg) {
-        var item = document.createElement('li');
-        item.textContent = msg;
+      //Odbierz wiadomość
+      socket.on('chat message', (user,msg,timestamp)=>{displayMsg(user,msg,timestamp);});
+
+
+      //Tworzenie wiadomości
+      function displayMsg(user,msg,timestamp){
+        let item = document.createElement('div');
+        if(user===username){
+          item.setAttribute("style", "background-color:"+kolor+"; align:right;");
+        }
+        let i_user= document.createElement("p");
+        i_user.textContent=user;
+        i_user.classList.add("user");
+        let i_msg= document.createElement("p");
+        i_msg.textContent=msg;
+        let i_time= document.createElement("p");
+        i_time.textContent=timestamp;
+        i_time.classList.add("time");
+        //item.textContent = user+":"+msg+" ("+timestamp+")";
+        item.appendChild(i_user);
+        item.appendChild(i_msg);
+        item.appendChild(i_time);
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
-      });
+      }
+
+      function displayRoomChange(room){
+        let item = document.createElement('li');
+        item.textContent="Now sending messages to: "+room;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+
+      function updateActiveUsers(users){
+        let userList = document.getElementById('users');
+        users.forEach((value,key)=>{
+          if(key!=socket.id) {
+            let node = document.createElement("li");
+            node.appendChild(document.createTextNode(key + " (" + value + ")"));
+            node.classList.add('user');
+            userList.appendChild(node);
+          }
+        })
+      }
     </script>
   </body>
 </html>
